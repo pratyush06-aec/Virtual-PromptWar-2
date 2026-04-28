@@ -2,6 +2,11 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 dotenv.config();
 
@@ -75,6 +80,13 @@ app.post('/api/ask-buddy', async (req, res) => {
     console.error("Error asking BallotBuddy:", error);
     res.status(500).json({ error: "Failed to fetch response from BallotBuddy" });
   }
+});
+
+// Serve Vite's production build
+app.use(express.static(path.join(__dirname, 'dist')));
+
+app.use((req, res) => {
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
 app.listen(PORT, () => {
