@@ -1,48 +1,136 @@
 import './style.css';
-import { candidates } from './data.js';
+import { auth, googleProvider } from './firebase-config.js';
+import { signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from 'firebase/auth';
 import { generateCandidateSummary, askBallotBuddy } from './ai.js';
 
 const state = {
   user: null,
+  candidates: [],
   selectedCandidates: [],
 };
 
-// Initialize App
-function initApp() {
-  const storedUser = localStorage.getItem('ballotBuddyUser');
-  if (storedUser) {
-    state.user = JSON.parse(storedUser);
-    renderDashboard();
-  } else {
-    renderOnboarding();
+// Fetch candidates from backend (Firestore via Express)
+async function loadCandidates() {
+  try {
+    const res = await fetch('/api/candidates');
+    const data = await res.json();
+    state.candidates = data.candidates || [];
+  } catch (err) {
+    console.error('Failed to load candidates:', err);
+    state.candidates = [];
   }
 }
 
-// Render Onboarding (Mock Auth)
+// Initialize App
+function initApp() {
+  onAuthStateChanged(auth, async (firebaseUser) => {
+    if (firebaseUser) {
+      const stored = localStorage.getItem('ballotBuddyProfile');
+      const profile = stored ? JSON.parse(stored) : null;
+      if (profile && profile.uid === firebaseUser.uid) {
+        state.user = profile;
+        await loadCandidates();
+        renderDashboard();
+      } else {
+        // Authenticated but no profile yet — show persona picker
+        state.user = { uid: firebaseUser.uid, name: firebaseUser.displayName || firebaseUser.email, email: firebaseUser.email };
+        renderProfileSetup();
+      }
+    } else {
+      state.user = null;
+      renderOnboarding();
+    }
+  });
+}
+
+// Render Onboarding (Firebase Auth)
 function renderOnboarding() {
   const appContainer = document.getElementById('app-container');
   const navActions = document.getElementById('nav-actions');
-  
-  navActions.innerHTML = ''; // No actions on onboarding
-  
+  navActions.innerHTML = '';
+
   appContainer.innerHTML = `
     <div class="glass-panel" style="max-width: 500px; margin: 0 auto; width: 100%; padding: 2rem;">
       <div class="text-center mb-4">
         <h2>Welcome to BallotBuddy</h2>
         <p>Your personal guide to the elections.</p>
       </div>
-      
-      <form id="onboarding-form">
+
+      <button id="btn-google-signin" class="btn btn-primary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.75rem; padding: 0.8rem;">
+        <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+        Sign in with Google
+      </button>
+
+      <div style="text-align: center; margin: 1.5rem 0; color: var(--text-muted); font-size: 0.85rem;">— or sign in with email —</div>
+
+      <form id="email-auth-form">
         <div class="form-group">
-          <label for="name">Full Name</label>
-          <input type="text" id="name" class="form-control" placeholder="Enter your name" required>
+          <label for="auth-email">Email</label>
+          <input type="email" id="auth-email" class="form-control" placeholder="you@example.com" required>
         </div>
-        
+        <div class="form-group">
+          <label for="auth-password">Password</label>
+          <input type="password" id="auth-password" class="form-control" placeholder="Min 6 characters" required>
+        </div>
+        <div id="auth-error" style="color: var(--accent); font-size: 0.85rem; margin-bottom: 0.5rem; display: none;"></div>
+        <button type="submit" class="btn btn-primary" style="width: 100%;">Sign In</button>
+        <button type="button" id="btn-create-account" class="btn btn-outline" style="width: 100%; margin-top: 0.5rem;">Create Account</button>
+      </form>
+    </div>
+  `;
+
+  // Google Sign-In
+  document.getElementById('btn-google-signin').addEventListener('click', async () => {
+    try { await signInWithPopup(auth, googleProvider); } catch (err) { console.error('Google sign-in error:', err); }
+  });
+
+  // Email Sign-In
+  document.getElementById('email-auth-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('auth-email').value;
+    const password = document.getElementById('auth-password').value;
+    const errDiv = document.getElementById('auth-error');
+    try {
+      errDiv.style.display = 'none';
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (err) {
+      errDiv.textContent = err.message.replace('Firebase: ', '');
+      errDiv.style.display = 'block';
+    }
+  });
+
+  // Create Account
+  document.getElementById('btn-create-account').addEventListener('click', async () => {
+    const email = document.getElementById('auth-email').value;
+    const password = document.getElementById('auth-password').value;
+    const errDiv = document.getElementById('auth-error');
+    try {
+      errDiv.style.display = 'none';
+      await createUserWithEmailAndPassword(auth, email, password);
+    } catch (err) {
+      errDiv.textContent = err.message.replace('Firebase: ', '');
+      errDiv.style.display = 'block';
+    }
+  });
+}
+
+// Render Profile Setup (after auth, before dashboard)
+function renderProfileSetup() {
+  const appContainer = document.getElementById('app-container');
+  const navActions = document.getElementById('nav-actions');
+  navActions.innerHTML = '';
+
+  appContainer.innerHTML = `
+    <div class="glass-panel" style="max-width: 500px; margin: 0 auto; width: 100%; padding: 2rem;">
+      <div class="text-center mb-4">
+        <h2>Set Up Your Profile</h2>
+        <p>Hi <strong>${state.user.name}</strong>! Tell us a bit about yourself.</p>
+      </div>
+      <form id="profile-form">
         <div class="form-group">
           <label for="location">Location (City / PIN Code)</label>
           <input type="text" id="location" class="form-control" placeholder="e.g. Kolkata or 700001" required>
         </div>
-        
         <div class="form-group">
           <label>I am a...</label>
           <div class="persona-selector">
@@ -58,35 +146,27 @@ function renderOnboarding() {
             </div>
           </div>
         </div>
-        
-        <button type="submit" class="btn btn-primary" style="width: 100%;">
-          Start My Journey
-        </button>
+        <button type="submit" class="btn btn-primary" style="width: 100%;">Start My Journey</button>
       </form>
     </div>
   `;
 
-  // Handle Persona Selection
   let selectedPersona = 'first-time';
-  const personaCards = document.querySelectorAll('.persona-card');
-  personaCards.forEach(card => {
+  document.querySelectorAll('.persona-card').forEach(card => {
     card.addEventListener('click', () => {
-      personaCards.forEach(c => c.classList.remove('active'));
+      document.querySelectorAll('.persona-card').forEach(c => c.classList.remove('active'));
       card.classList.add('active');
       selectedPersona = card.dataset.persona;
     });
   });
 
-  // Handle Form Submit
-  document.getElementById('onboarding-form').addEventListener('submit', (e) => {
+  document.getElementById('profile-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const name = document.getElementById('name').value;
     const location = document.getElementById('location').value;
-    
-    const user = { name, location, persona: selectedPersona };
-    localStorage.setItem('ballotBuddyUser', JSON.stringify(user));
-    state.user = user;
-    
+    const profile = { ...state.user, location, persona: selectedPersona };
+    localStorage.setItem('ballotBuddyProfile', JSON.stringify(profile));
+    state.user = profile;
+    await loadCandidates();
     renderDashboard();
   });
 }
@@ -104,10 +184,10 @@ function renderDashboard() {
     </div>
   `;
   
-  document.getElementById('btn-logout').addEventListener('click', () => {
-    localStorage.removeItem('ballotBuddyUser');
+  document.getElementById('btn-logout').addEventListener('click', async () => {
+    localStorage.removeItem('ballotBuddyProfile');
     state.user = null;
-    renderOnboarding();
+    await signOut(auth);
   });
 
   // Render Dashboard Content based on Persona
@@ -323,7 +403,7 @@ function renderCandidateGrid() {
     <div class="candidate-grid mt-4" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem;">
   `;
 
-  candidates.forEach(c => {
+  state.candidates.forEach(c => {
     gridHTML += `
       <div class="glass-card candidate-card" data-id="${c.id}">
         <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
@@ -361,7 +441,7 @@ function renderCandidateGrid() {
   document.querySelectorAll('.btn-ai-summary').forEach(btn => {
     btn.addEventListener('click', async (e) => {
       const candidateId = e.target.dataset.id;
-      const candidate = candidates.find(c => c.id === candidateId);
+      const candidate = state.candidates.find(c => c.id === candidateId);
       const summaryDiv = document.getElementById(`summary-result-${candidateId}`);
       if (candidate && summaryDiv) {
         summaryDiv.style.padding = '0.75rem';
@@ -416,8 +496,8 @@ function renderCandidateGrid() {
         return;
       }
       
-      const c1 = candidates.find(c => c.id === state.selectedCandidates[0]);
-      const c2 = candidates.find(c => c.id === state.selectedCandidates[1]);
+      const c1 = state.candidates.find(c => c.id === state.selectedCandidates[0]);
+      const c2 = state.candidates.find(c => c.id === state.selectedCandidates[1]);
       
       compContainer.innerHTML = `
         <div class="glass-panel" style="padding: 2rem; border-top: 4px solid var(--warning); animation: dropIn 0.3s ease;">
