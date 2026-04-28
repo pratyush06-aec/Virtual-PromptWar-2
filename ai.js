@@ -3,12 +3,12 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 // Initialize the Gemini API using the Vite environment variable
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 const genAI = new GoogleGenerativeAI(API_KEY);
-const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' }); // Or gemini-1.5-flash for speed
+const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
 export async function generateCandidateSummary(candidate) {
   try {
     const prompt = `
-      You are an unbiased political analyst AI. Summarize the following candidate's profile into a brief, easy-to-read paragraph (max 4 sentences) for a voter. Highlight key strengths and any major red flags (like criminal records) objectively. Do not use Markdown formatting like bold or asterisks.
+      You are an expert political analyst AI. The user has provided you with basic facts about a candidate. Your task is to generate an ELABORATE, creative, and highly detailed mock profile for this candidate to show off the AI summary feature. Expand significantly on their basic stats to create a realistic, objective backstory. Include hypothetical details about their past campaigns, key policy focuses, public perception, and elaborate on their assets vs. criminal records. Do not use Markdown formatting like bold or asterisks.
       
       Name: ${candidate.name}
       Party: ${candidate.party}
@@ -32,11 +32,11 @@ export async function askBallotBuddy(userMessage, userContext) {
     // Determine the instructions based on the AI Mode
     let modeInstructions = "";
     if (userContext.aiMode === 'beginner') {
-      modeInstructions = "Use very simple language. Break everything down step-by-step. Assume the user knows nothing about voting.";
+      modeInstructions = "Respond in a to the point way. Keep it very simple and direct without overwhelming details.";
     } else if (userContext.aiMode === 'summary') {
-      modeInstructions = "Be extremely concise. Use bullet points. Provide fast facts only.";
+      modeInstructions = "Give a gist for the particular task asked. Provide a brief overview or bulleted facts.";
     } else if (userContext.aiMode === 'deep-dive') {
-      modeInstructions = "Provide a comprehensive, detailed analysis. Include historical context, constitutional rules, or policy implications where relevant.";
+      modeInstructions = "Dive in depth into details about the same task. Provide comprehensive historical context, statistics, or thorough explanations.";
     }
 
     const systemPrompt = `
@@ -56,6 +56,6 @@ export async function askBallotBuddy(userMessage, userContext) {
     return result.response.text();
   } catch (error) {
     console.error("Error asking BallotBuddy:", error);
-    return "Sorry, BallotBuddy is currently unavailable. Please try again.";
+    return `Sorry, BallotBuddy encountered an error: ${error.message}. Please try again.`;
   }
 }

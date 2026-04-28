@@ -2,9 +2,9 @@ import './style.css';
 import { candidates } from './data.js';
 import { generateCandidateSummary, askBallotBuddy } from './ai.js';
 
-// State Management
 const state = {
   user: null,
+  selectedCandidates: [],
 };
 
 // Initialize App
@@ -314,8 +314,8 @@ function renderCandidateGrid() {
           <h2>Candidate Information System</h2>
           <p>Explore and compare candidates in your area.</p>
         </div>
-        <button class="btn btn-outline" style="border-color: var(--warning); color: var(--warning);">
-          VS Compare Selected (0)
+        <button id="btn-vs-compare" class="btn btn-outline" style="border-color: var(--warning); color: var(--warning);">
+          VS Compare Selected (${state.selectedCandidates.length})
         </button>
       </div>
     </div>
@@ -342,7 +342,9 @@ function renderCandidateGrid() {
         
         <div class="mt-4" style="display: flex; gap: 0.5rem;">
           <button class="btn btn-primary btn-ai-summary" data-id="${c.id}" style="flex: 1; padding: 0.5rem; font-size: 0.85rem;">AI Summary</button>
-          <button class="btn btn-outline" style="flex: 1; padding: 0.5rem; font-size: 0.85rem;">Select</button>
+          <button class="btn btn-outline btn-select-candidate" data-id="${c.id}" style="flex: 1; padding: 0.5rem; font-size: 0.85rem;">
+            ${state.selectedCandidates.includes(c.id) ? 'Selected ✅' : 'Select'}
+          </button>
         </div>
         <div id="summary-result-${c.id}" style="margin-top: 1rem; font-size: 0.85rem; color: #fff; background: rgba(66, 133, 244, 0.1); border-radius: 4px; padding: 0;"></div>
       </div>
@@ -367,6 +369,36 @@ function renderCandidateGrid() {
         
         summaryDiv.innerHTML = summaryText;
         e.target.disabled = false;
+      }
+    });
+  });
+
+  // Add event listeners for Candidate Selection buttons
+  document.querySelectorAll('.btn-select-candidate').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const candidateId = e.target.dataset.id;
+      
+      // Toggle selection
+      if (state.selectedCandidates.includes(candidateId)) {
+        state.selectedCandidates = state.selectedCandidates.filter(id => id !== candidateId);
+        e.target.textContent = 'Select';
+        e.target.style.background = 'transparent';
+        e.target.style.color = 'var(--text-main)';
+      } else {
+        if (state.selectedCandidates.length < 2) {
+          state.selectedCandidates.push(candidateId);
+          e.target.textContent = 'Selected ✅';
+          e.target.style.background = 'rgba(52, 168, 83, 0.2)';
+          e.target.style.color = 'white';
+        } else {
+          alert('You can only compare 2 candidates at a time.');
+        }
+      }
+      
+      // Update Header Button
+      const vsCompareBtn = document.getElementById('btn-vs-compare');
+      if (vsCompareBtn) {
+        vsCompareBtn.textContent = `VS Compare Selected (${state.selectedCandidates.length})`;
       }
     });
   });
