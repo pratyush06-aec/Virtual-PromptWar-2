@@ -351,7 +351,10 @@ function renderCandidateGrid() {
     `;
   });
 
-  gridHTML += `</div>`;
+  gridHTML += `
+    </div>
+    <div id="comparison-container" class="mt-4" style="transition: all 0.3s ease;"></div>
+  `;
   appContainer.innerHTML = gridHTML;
 
   // Add event listeners for AI Summary buttons
@@ -402,6 +405,90 @@ function renderCandidateGrid() {
       }
     });
   });
+
+  // Add event listener for the VS Compare button
+  const vsCompareBtn = document.getElementById('btn-vs-compare');
+  if (vsCompareBtn) {
+    vsCompareBtn.addEventListener('click', () => {
+      const compContainer = document.getElementById('comparison-container');
+      if (state.selectedCandidates.length !== 2) {
+        alert('Please select exactly 2 candidates to compare.');
+        return;
+      }
+      
+      const c1 = candidates.find(c => c.id === state.selectedCandidates[0]);
+      const c2 = candidates.find(c => c.id === state.selectedCandidates[1]);
+      
+      compContainer.innerHTML = `
+        <div class="glass-panel" style="padding: 2rem; border-top: 4px solid var(--warning); animation: dropIn 0.3s ease;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h2>Quick Comparison</h2>
+            <button id="btn-clear-compare" class="btn btn-outline" style="font-size: 0.8rem; padding: 0.4rem 0.8rem;">Clear</button>
+          </div>
+          
+          <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left; color: white;">
+              <thead>
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.2);">
+                  <th style="padding: 1rem; width: 20%;">Metrics</th>
+                  <th style="padding: 1rem; width: 40%; border-left: 1px solid rgba(255,255,255,0.1);">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                      <img src="${c1.image}" style="width: 30px; height: 30px; border-radius: 50%;">
+                      ${c1.name} <span style="font-size: 0.7rem; color: var(--text-muted);">(${c1.party})</span>
+                    </div>
+                  </th>
+                  <th style="padding: 1rem; width: 40%; border-left: 1px solid rgba(255,255,255,0.1);">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                      <img src="${c2.image}" style="width: 30px; height: 30px; border-radius: 50%;">
+                      ${c2.name} <span style="font-size: 0.7rem; color: var(--text-muted);">(${c2.party})</span>
+                    </div>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.02);">
+                  <td style="padding: 1rem; font-weight: bold; color: var(--text-muted);">Education</td>
+                  <td style="padding: 1rem; border-left: 1px solid rgba(255,255,255,0.1);">${c1.education}</td>
+                  <td style="padding: 1rem; border-left: 1px solid rgba(255,255,255,0.1);">${c2.education}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                  <td style="padding: 1rem; font-weight: bold; color: var(--text-muted);">Total Assets</td>
+                  <td style="padding: 1rem; border-left: 1px solid rgba(255,255,255,0.1); color: var(--secondary);">${c1.assets}</td>
+                  <td style="padding: 1rem; border-left: 1px solid rgba(255,255,255,0.1); color: var(--secondary);">${c2.assets}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.02);">
+                  <td style="padding: 1rem; font-weight: bold; color: var(--text-muted);">Criminal Records</td>
+                  <td style="padding: 1rem; border-left: 1px solid rgba(255,255,255,0.1); color: ${c1.criminal_records > 0 ? 'var(--accent)' : 'var(--text-main)'};">${c1.criminal_records}</td>
+                  <td style="padding: 1rem; border-left: 1px solid rgba(255,255,255,0.1); color: ${c2.criminal_records > 0 ? 'var(--accent)' : 'var(--text-main)'};">${c2.criminal_records}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                  <td style="padding: 1rem; font-weight: bold; color: var(--text-muted);">Past Record</td>
+                  <td style="padding: 1rem; border-left: 1px solid rgba(255,255,255,0.1); font-size: 0.85rem;">${c1.past}</td>
+                  <td style="padding: 1rem; border-left: 1px solid rgba(255,255,255,0.1); font-size: 0.85rem;">${c2.past}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 1rem; font-weight: bold; color: var(--text-muted);">Electoral Performance</td>
+                  <td style="padding: 1rem; border-left: 1px solid rgba(255,255,255,0.1); font-size: 0.85rem;">${c1.performance}</td>
+                  <td style="padding: 1rem; border-left: 1px solid rgba(255,255,255,0.1); font-size: 0.85rem;">${c2.performance}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+
+      // Scroll to comparison
+      setTimeout(() => {
+        compContainer.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      }, 100);
+
+      // Add clear event listener
+      document.getElementById('btn-clear-compare').addEventListener('click', () => {
+        state.selectedCandidates = [];
+        renderCandidateGrid(); // Re-render to clear selection styles
+      });
+    });
+  }
 }
 
 // Render Gamified Election Simulator
