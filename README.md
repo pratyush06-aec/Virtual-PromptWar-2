@@ -11,8 +11,8 @@
 **BallotBuddy** is a modern, responsive web application designed to empower voters through a gamified, personalized, and deeply insightful experience. Whether you are an anxious 18-year-old First-Time Voter or an Experienced Voter looking for in-depth candidate statistics, BallotBuddy adapts its UI and AI responses perfectly to your needs.
 
 ## 🚀 Live Demo & Deployment
-> **Cloud Run Deployment Note:**
-> The deployment command has been prepared. Due to a missing Google Cloud Billing account on the target project (`gena-workshop`), the automated Cloud Run deployment is currently paused. See the "Deployment" section below to deploy it yourself once billing is enabled!
+You can access the fully functional, live application here:
+**🔗 [BallotBuddy Live Demo](https://ballotbuddy-369865779033.us-central1.run.app)**
 
 ### Demo Media
 #### Application Walkthrough
@@ -109,10 +109,10 @@ To run BallotBuddy locally on your machine:
 ---
 
 ## ☁️ Cloud Run Deployment
-The project is fully Dockerized. Once you have an active billing account on your GCP Project (`gena-workshop`), run the following command to deploy directly from source:
+The project is fully Dockerized. To deploy it to your GCP Project (`nexus-venue-190880`), run the following command to deploy directly from source:
 
 ```bash
-gcloud run deploy ballotbuddy --source . --project gena-workshop --region us-central1 --allow-unauthenticated --set-env-vars="VITE_GEMINI_API_KEY=your_gemini_api_key_here"
+gcloud run deploy ballotbuddy --source . --project nexus-venue-190880 --region us-central1 --allow-unauthenticated --set-env-vars="VITE_GEMINI_API_KEY=your_gemini_api_key_here"
 ```
 
 ---
