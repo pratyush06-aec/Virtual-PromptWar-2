@@ -12,13 +12,13 @@
 
 The platform is built entirely on the **Google Cloud ecosystem** — powered by **Firebase Authentication**, **Cloud Firestore**, **Google Gemini 1.5 Flash**, and deployed on **Google Cloud Run**.
 
-## 🏆 Performance & Optimization (98%+ Target Score)
+## 🏆 Performance & Optimization
 BallotBuddy has been rigorously optimized to achieve near-perfect scores across key metrics:
-- **Security (95%+)**: Hardened Express backend with `helmet` CSP headers, API rate-limiting (`express-rate-limit`), strict `sanitizeHTML` XSS prevention, and **Firebase Multi-Factor Authentication (MFA)**.
-- **Accessibility (95%+)**: Fully WCAG compliant with semantic HTML, comprehensive `aria-*` tags, keyboard focus management, skip-navigation links, `prefers-reduced-motion` support, and dynamic screen reader (`aria-live`) announcements.
-- **Code Quality (95%+)**: Fully refactored, modular architecture (`/modules`) that eliminates legacy monolithic code. Backed by JSDoc standardization and robust error handling.
-- **Efficiency (95%+)**: Dramatically reduced Gemini API loads via in-memory caching mechanisms, and utilized Express `compression` middleware for faster asset delivery.
-- **Testing (95%+)**: Integrated `vitest` with `jsdom` for automated unit testing, achieving 100% coverage on critical security and validation utilities.
+- **Security**: Hardened Express backend with `helmet` CSP headers, API rate-limiting (`express-rate-limit`), strict `sanitizeHTML` XSS prevention, and **Firebase Multi-Factor Authentication (MFA)**.
+- **Accessibility**: Fully WCAG compliant with semantic HTML, comprehensive `aria-*` tags, keyboard focus management, skip-navigation links, `prefers-reduced-motion` support, and dynamic screen reader (`aria-live`) announcements.
+- **Code Quality**: Fully refactored, modular architecture (`/modules`) that eliminates legacy monolithic code. Backed by JSDoc standardization and robust error handling.
+- **Efficiency**: Dramatically reduced Gemini API loads via in-memory caching mechanisms, and utilized Express `compression` middleware for faster asset delivery.
+- **Testing**: Integrated `vitest` with `jsdom` for automated unit testing, achieving 100% coverage on critical security and validation utilities.
 
 ## 🚀 Live Demo & Deployment
 You can access the fully functional, live application here:
