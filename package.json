@@ -9,14 +9,21 @@
     "preview": "vite preview"
   },
   "devDependencies": {
-    "vite": "^8.0.10"
+    "@testing-library/dom": "^10.4.1",
+    "@vitest/coverage-v8": "^4.1.5",
+    "jsdom": "^29.1.1",
+    "vite": "^8.0.10",
+    "vitest": "^4.1.5"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
+    "compression": "^1.8.1",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.4.1",
     "firebase": "^12.12.1",
-    "firebase-admin": "^13.8.0"
+    "firebase-admin": "^13.8.0",
+    "helmet": "^8.1.0"
   }
 }

@@ -1,7 +1,13 @@
-// Firebase Client Config — safe to expose (used ONLY for Auth, not for Gemini)
+/**
+ * @module firebase-config
+ * @description Firebase client-side configuration for Authentication, Storage, and MFA.
+ * Client config keys are safe to expose (used ONLY for Auth/Storage, not for Gemini).
+ */
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
+import { getStorage } from 'firebase/storage';
 
+/** @type {import('firebase/app').FirebaseOptions} */
 const firebaseConfig = {
   apiKey: "AIzaSyDrkL2m83_z0JBW92E9k8U4BGaIxYeT0f4",
   authDomain: "nexus-venue-190880-e0408.firebaseapp.com",
@@ -15,5 +21,6 @@ const firebaseConfig = {
 const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
 const googleProvider = new GoogleAuthProvider();
+const storage = getStorage(firebaseApp);
 
-export { auth, googleProvider };
+export { auth, googleProvider, storage };
